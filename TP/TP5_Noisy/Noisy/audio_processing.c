@@ -36,6 +36,8 @@ static int16_t max_norm_index = -1; //pour la récupérer
 #define FREQ_BACKWARD	26	//406Hz
 #define MAX_FREQ		500	//we don't analyze after this index to not use resources for nothing
 
+// faire un define qui nous permettrait de changer le micro quon utilise
+
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
 #define FREQ_FORWARD_H		(FREQ_FORWARD+1)
 #define FREQ_LEFT_L			(FREQ_LEFT-1)
@@ -58,24 +60,18 @@ uint16_t get_position_freq()
 	return micLeft_output[max_norm_index];
 }
 
-void detectPeak(float* data)
+static float current_max =0;  //faire une remise a 0 plus clean que ca
+static unsigned int tmp_index =0;
+unsigned int detectPeak2(float data, unsigned int index)
 {
-	float current_max =MIN_VALUE_THRESHOLD;
-	unsigned int pos = MIN_FREQ;
-	float frequency =0;
-	for(unsigned int i =MIN_FREQ; i<= MAX_FREQ; i++) // MAX FREG ET CHANGER LE DéPART
+	if(data > current_max)
 	{
-		if(data[i] > current_max)
-		{
-			current_max = data[i];
-			pos = i;
-			frequency = 150 - abs(pos)*150/512;
-		}
+		current_max = data;
+		tmp_index = index;
 	}
-//	frequency = 150 - abs(pos)*150/512; //position = pos sur fourier
-	chprintf((BaseSequentialStream *)&SDU1, "POS = %f, amplitude = %f\n", frequency, current_max);
-
+	return tmp_index;
 }
+
 void sound_remote(float* data){
 	float max_norm = MIN_VALUE_THRESHOLD;
 
@@ -116,7 +112,7 @@ void sound_remote(float* data){
 
 static unsigned int temp = 0;
 static unsigned int size = 0;
-static bool trigger = true;
+static float frequency = 0;
 void processAudioData(int16_t *data, uint16_t num_samples){
 
 	/*
@@ -127,106 +123,49 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	*
 	*/
 
+	unsigned int pos_tmp = 01;
 	for(unsigned int i=0; i < 160; i++)
-		{
-			micRight_cmplx_input[2*size] = data[4*i];
-			micLeft_cmplx_input[2*size] = data[4*i+1];
-			micBack_cmplx_input[2*size] = data[4*i+2];
-			micFront_cmplx_input[2*size] = data[4*i+3];
+	{
+		micRight_cmplx_input[2*size] = data[4*i];
+		micLeft_cmplx_input[2*size] = data[4*i+1];
+		micBack_cmplx_input[2*size] = data[4*i+2];
+		micFront_cmplx_input[2*size] = data[4*i+3];
 
-			micRight_cmplx_input[2*size+1] = 0;
-			micLeft_cmplx_input[2*size+1] = 0;
-			micBack_cmplx_input[2*size+1] = 0;
-			micFront_cmplx_input[2*size+1] = 0;
-			size++;
+		micRight_cmplx_input[2*size+1] = 0;
+		micLeft_cmplx_input[2*size+1] = 0;
+		micBack_cmplx_input[2*size+1] = 0;
+		micFront_cmplx_input[2*size+1] = 0;
+		size++;
 
-			if(size >= FFT_SIZE)
-			{
-				break;
-			}
-		}
+		pos_tmp = detectPeak2(micLeft_cmplx_input[2*size], 2*size);// we do it here to avoid double checking the table of input.
 
 		if(size >= FFT_SIZE)
 		{
-			doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
-			arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
-			size = 0;
-			temp++;
-
-			if(temp == 10)
-			{
-				temp = 0;
-				chBSemSignal(&sendToComputer_sem);
-				detectPeak(micLeft_output);
-			}
+			break;
 		}
+	}
 
+	if(size >= FFT_SIZE)
+	{
+		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
+		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
+		size = 0;
+		temp++;
+		if(temp == 10)
+		{
+			temp = 0;
+			chBSemSignal(&sendToComputer_sem);
+			if(pos_tmp < 1 && pos_tmp > FFT_SIZE)
+			{
+				pos_tmp = 1;
+			}
+			frequency = pos_tmp*7,8125; // optimiser en faisant une recherche sur le domaine qui nous interesse, par exemple entre 100 et 1000Hz.
+			chprintf((BaseSequentialStream *)&SDU1, "freq %f\n", frequency);
 
-
-
-
-//	static uint16_t nb_samples = 0;
-//		static uint8_t mustSend = 0;
-//
-//		//loop to fill the buffers
-//		for(uint16_t i = 0 ; i < num_samples ; i+=4){
-//			//construct an array of complex numbers. Put 0 to the imaginary part
-//			micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
-//			micLeft_cmplx_input[nb_samples] = (float)data[i + MIC_LEFT];
-//			micBack_cmplx_input[nb_samples] = (float)data[i + MIC_BACK];
-//			micFront_cmplx_input[nb_samples] = (float)data[i + MIC_FRONT];
-//
-//			nb_samples++;
-//
-//			micRight_cmplx_input[nb_samples] = 0;
-//			micLeft_cmplx_input[nb_samples] = 0;
-//			micBack_cmplx_input[nb_samples] = 0;
-//			micFront_cmplx_input[nb_samples] = 0;
-//
-//			nb_samples++;
-//
-//			//stop when buffer is full
-//			if(nb_samples >= (2 * FFT_SIZE)){
-//				break;
-//			}
-//		}
-//
-//		if(nb_samples >= (2 * FFT_SIZE)){
-//			/*	FFT proccessing
-//			*
-//			*	This FFT function stores the results in the input buffer given.
-//			*	This is an "In Place" function.
-//			*/
-//
-//			doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
-//			doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
-//			doFFT_optimized(FFT_SIZE, micFront_cmplx_input);
-//			doFFT_optimized(FFT_SIZE, micBack_cmplx_input);
-//
-//			/*	Magnitude processing
-//			*
-//			*	Computes the magnitude of the complex numbers and
-//			*	stores them in a buffer of FFT_SIZE because it only contains
-//			*	real numbers.
-//			*
-//			*/
-//			arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
-//			arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
-//			arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
-//			arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
-//
-//			//sends only one FFT result over 10 for 1 mic to not flood the computer
-//			//sends to UART3
-//			if(mustSend > 8){
-//				//signals to send the result to the computer
-//				chBSemSignal(&sendToComputer_sem);
-//				mustSend = 0;
-//			}
-//			nb_samples = 0;
-//			mustSend++;
-//
-//			sound_remote(micLeft_output);
-//		}
+			current_max =0;
+			tmp_index =0;
+		}
+	}
 }
 
 
