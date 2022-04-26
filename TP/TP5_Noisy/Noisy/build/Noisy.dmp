@@ -64,13 +64,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  21 .debug_ranges 00003798  00000000  00000000  00126f30  2**0
                   CONTENTS, READONLY, DEBUGGING
- 22 .debug_line   00028707  00000000  00000000  0012a6c8  2**0
+ 22 .debug_line   0002870b  00000000  00000000  0012a6c8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 23 .debug_str    000086ff  00000000  00000000  00152dcf  2**0
+ 23 .debug_str    000086ff  00000000  00000000  00152dd3  2**0
                   CONTENTS, READONLY, DEBUGGING
- 24 .debug_frame  000077f8  00000000  00000000  0015b4d0  2**2
+ 24 .debug_frame  000077f8  00000000  00000000  0015b4d4  2**2
                   CONTENTS, READONLY, DEBUGGING
- 25 .debug_loc    00016403  00000000  00000000  00162cc8  2**0
+ 25 .debug_loc    00016403  00000000  00000000  00162ccc  2**0
                   CONTENTS, READONLY, DEBUGGING
 SYMBOL TABLE:
 08000000 l    d  startup	00000000 startup
@@ -801,7 +801,7 @@ e000ed04 l       *ABS*	00000000 SCB_ICSR
 20010120 g     O .bss	00000004 __malloc_max_total_mem
 08002510 g     F .text	00000040 doFFT_optimized
 20000900 g     O .data	00000100 T1
-08002200 g     F .text	000001fc processAudioData
+08002200 g     F .text	000001f8 processAudioData
 080039b0  w    F .text	0000001c VectorA0
 20010044 g     O .bss	0000001c PWMD4
 08009fa0 g     F .text	000004b8 usb_lld_pump

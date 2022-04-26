@@ -151,20 +151,26 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 		size = 0;
 		temp++;
+		if(pos_tmp < 1 && pos_tmp > FFT_SIZE)
+		{
+			pos_tmp = 1;
+		}
 		if(temp == 10)
 		{
 			temp = 0;
 			chBSemSignal(&sendToComputer_sem);
-			if(pos_tmp < 1 && pos_tmp > FFT_SIZE)
-			{
-				pos_tmp = 1;
-			}
-			frequency = pos_tmp*7,8125; // optimiser en faisant une recherche sur le domaine qui nous interesse, par exemple entre 100 et 1000Hz.
+
+			frequency = (float)(pos_tmp*8); // optimiser en faisant une recherche sur le domaine qui nous interesse, par exemple entre 100 et 1000Hz.
 			chprintf((BaseSequentialStream *)&SDU1, "freq %f\n", frequency);
 
 			current_max =0;
 			tmp_index =0;
 		}
+
+//		if(frequency > 140 && frequency < 160)
+//		{
+//
+//		}
 	}
 }
 

@@ -7148,9 +7148,9 @@ destructors     0x080001c0        0x0
                 0x080021c0       0x3c build/obj/audio_processing.o
  *fill*         0x080021fc        0x4 
  .text.processAudioData
-                0x08002200      0x1fc build/obj/audio_processing.o
+                0x08002200      0x1f8 build/obj/audio_processing.o
                 0x08002200                processAudioData
- *fill*         0x080023fc        0x4 
+ *fill*         0x080023f8        0x8 
  .text.wait_send_to_computer
                 0x08002400       0x2c build/obj/audio_processing.o
                 0x08002400                wait_send_to_computer
@@ -9953,80 +9953,80 @@ OUTPUT(build/Noisy.elf elf32-littlearm)
  .debug_ranges  0x000036b8       0xd0 ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cmplx_mag_f32.o)
  .debug_ranges  0x00003788       0x10 ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cfft_radix8_f32.o)
 
-.debug_line     0x00000000    0x28707
+.debug_line     0x00000000    0x2870b
  .debug_line    0x00000000      0xab0 build/obj/main.o
- .debug_line    0x00000ab0      0xbdc build/obj/audio_processing.o
- .debug_line    0x0000168c      0xa25 build/obj/communications.o
- .debug_line    0x000020b1      0xa95 build/obj/fft.o
- .debug_line    0x00002b46      0xaf9 build/obj/spi3_slave_lld.o
- .debug_line    0x0000363f      0xa9c build/obj/dcmi_lld.o
- .debug_line    0x000040db      0xe31 build/obj/spi3_slave.o
- .debug_line    0x00004f0c      0x942 build/obj/microphone.o
- .debug_line    0x0000584e      0xb33 build/obj/mp45dt02_processing.o
- .debug_line    0x00006381      0xa21 build/obj/memory_protection.o
- .debug_line    0x00006da2      0xa7b build/obj/motors.o
- .debug_line    0x0000781d      0x81c build/obj/panic.o
- .debug_line    0x00008039      0x8b0 build/obj/usbcfg.o
- .debug_line    0x000088e9      0x41f build/obj/malloc_lock.o
- .debug_line    0x00008d08      0x9da build/obj/newlib_syscalls.o
- .debug_line    0x000096e2       0x98 build/obj/crt1.o
- .debug_line    0x0000977a      0x22d build/obj/vectors.o
- .debug_line    0x000099a7      0x62e build/obj/chsys.o
- .debug_line    0x00009fd5      0x54c build/obj/chdebug.o
- .debug_line    0x0000a521      0x3fc build/obj/chvt.o
- .debug_line    0x0000a91d      0x6fb build/obj/chschd.o
- .debug_line    0x0000b018      0x9ca build/obj/chthreads.o
- .debug_line    0x0000b9e2      0x452 build/obj/chtm.o
- .debug_line    0x0000be34      0x3ec build/obj/chstats.o
- .debug_line    0x0000c220      0x4aa build/obj/chregistry.o
- .debug_line    0x0000c6ca      0x750 build/obj/chsem.o
- .debug_line    0x0000ce1a      0x748 build/obj/chmtx.o
- .debug_line    0x0000d562      0x81d build/obj/chevents.o
- .debug_line    0x0000dd7f      0x6f5 build/obj/chqueues.o
- .debug_line    0x0000e474      0x49e build/obj/chmemcore.o
- .debug_line    0x0000e912      0x50a build/obj/chheap.o
- .debug_line    0x0000ee1c      0x3ac build/obj/chcore_v7m.o
- .debug_line    0x0000f1c8      0x8e7 build/obj/hal.o
- .debug_line    0x0000faaf      0xa97 build/obj/hal_mmcsd.o
- .debug_line    0x00010546      0xb7d build/obj/adc.o
- .debug_line    0x000110c3      0xb7b build/obj/can.o
- .debug_line    0x00011c3e      0xb9a build/obj/dac.o
- .debug_line    0x000127d8      0xa3e build/obj/ext.o
- .debug_line    0x00013216      0xb0b build/obj/gpt.o
- .debug_line    0x00013d21      0xafa build/obj/i2c.o
- .debug_line    0x0001481b      0x9ea build/obj/i2s.o
- .debug_line    0x00015205      0xbf2 build/obj/pwm.o
- .debug_line    0x00015df7      0xc9c build/obj/sdc.o
- .debug_line    0x00016a93      0xa64 build/obj/serial.o
- .debug_line    0x000174f7      0xc38 build/obj/serial_usb.o
- .debug_line    0x0001812f      0xdc3 build/obj/spi.o
- .debug_line    0x00018ef2      0x8f7 build/obj/st.o
- .debug_line    0x000197e9      0xd7d build/obj/usb.o
- .debug_line    0x0001a566      0x88d build/obj/nvic.o
- .debug_line    0x0001adf3      0xaa9 build/obj/stm32_dma.o
- .debug_line    0x0001b89c      0x878 build/obj/hal_lld.o
- .debug_line    0x0001c114      0xbeb build/obj/adc_lld.o
- .debug_line    0x0001ccff      0x9ea build/obj/ext_lld_isr.o
- .debug_line    0x0001d6e9      0xc4a build/obj/can_lld.o
- .debug_line    0x0001e333      0x8b0 build/obj/ext_lld.o
- .debug_line    0x0001ebe3      0xcec build/obj/sdc_lld.o
- .debug_line    0x0001f8cf      0xa34 build/obj/dac_lld.o
- .debug_line    0x00020303      0x88a build/obj/pal_lld.o
- .debug_line    0x00020b8d      0xcc0 build/obj/i2c_lld.o
- .debug_line    0x0002184d      0xf6b build/obj/usb_lld.o
- .debug_line    0x000227b8      0x95b build/obj/i2s_lld.o
- .debug_line    0x00023113      0xa7a build/obj/spi_lld.o
- .debug_line    0x00023b8d      0x9b5 build/obj/gpt_lld.o
- .debug_line    0x00024542      0xa7f build/obj/pwm_lld.o
- .debug_line    0x00024fc1      0x8eb build/obj/st_lld.o
- .debug_line    0x000258ac      0xa38 build/obj/serial_lld.o
- .debug_line    0x000262e4      0x873 build/obj/board.o
- .debug_line    0x00026b57      0x9e3 build/obj/chprintf.o
- .debug_line    0x0002753a      0x12e ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_common_tables.o)
- .debug_line    0x00027668      0x77e ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cfft_f32.o)
- .debug_line    0x00027de6      0x20f ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cmplx_mag_f32.o)
- .debug_line    0x00027ff5       0x98 ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_bitreversal2.o)
- .debug_line    0x0002808d      0x67a ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cfft_radix8_f32.o)
+ .debug_line    0x00000ab0      0xbe0 build/obj/audio_processing.o
+ .debug_line    0x00001690      0xa25 build/obj/communications.o
+ .debug_line    0x000020b5      0xa95 build/obj/fft.o
+ .debug_line    0x00002b4a      0xaf9 build/obj/spi3_slave_lld.o
+ .debug_line    0x00003643      0xa9c build/obj/dcmi_lld.o
+ .debug_line    0x000040df      0xe31 build/obj/spi3_slave.o
+ .debug_line    0x00004f10      0x942 build/obj/microphone.o
+ .debug_line    0x00005852      0xb33 build/obj/mp45dt02_processing.o
+ .debug_line    0x00006385      0xa21 build/obj/memory_protection.o
+ .debug_line    0x00006da6      0xa7b build/obj/motors.o
+ .debug_line    0x00007821      0x81c build/obj/panic.o
+ .debug_line    0x0000803d      0x8b0 build/obj/usbcfg.o
+ .debug_line    0x000088ed      0x41f build/obj/malloc_lock.o
+ .debug_line    0x00008d0c      0x9da build/obj/newlib_syscalls.o
+ .debug_line    0x000096e6       0x98 build/obj/crt1.o
+ .debug_line    0x0000977e      0x22d build/obj/vectors.o
+ .debug_line    0x000099ab      0x62e build/obj/chsys.o
+ .debug_line    0x00009fd9      0x54c build/obj/chdebug.o
+ .debug_line    0x0000a525      0x3fc build/obj/chvt.o
+ .debug_line    0x0000a921      0x6fb build/obj/chschd.o
+ .debug_line    0x0000b01c      0x9ca build/obj/chthreads.o
+ .debug_line    0x0000b9e6      0x452 build/obj/chtm.o
+ .debug_line    0x0000be38      0x3ec build/obj/chstats.o
+ .debug_line    0x0000c224      0x4aa build/obj/chregistry.o
+ .debug_line    0x0000c6ce      0x750 build/obj/chsem.o
+ .debug_line    0x0000ce1e      0x748 build/obj/chmtx.o
+ .debug_line    0x0000d566      0x81d build/obj/chevents.o
+ .debug_line    0x0000dd83      0x6f5 build/obj/chqueues.o
+ .debug_line    0x0000e478      0x49e build/obj/chmemcore.o
+ .debug_line    0x0000e916      0x50a build/obj/chheap.o
+ .debug_line    0x0000ee20      0x3ac build/obj/chcore_v7m.o
+ .debug_line    0x0000f1cc      0x8e7 build/obj/hal.o
+ .debug_line    0x0000fab3      0xa97 build/obj/hal_mmcsd.o
+ .debug_line    0x0001054a      0xb7d build/obj/adc.o
+ .debug_line    0x000110c7      0xb7b build/obj/can.o
+ .debug_line    0x00011c42      0xb9a build/obj/dac.o
+ .debug_line    0x000127dc      0xa3e build/obj/ext.o
+ .debug_line    0x0001321a      0xb0b build/obj/gpt.o
+ .debug_line    0x00013d25      0xafa build/obj/i2c.o
+ .debug_line    0x0001481f      0x9ea build/obj/i2s.o
+ .debug_line    0x00015209      0xbf2 build/obj/pwm.o
+ .debug_line    0x00015dfb      0xc9c build/obj/sdc.o
+ .debug_line    0x00016a97      0xa64 build/obj/serial.o
+ .debug_line    0x000174fb      0xc38 build/obj/serial_usb.o
+ .debug_line    0x00018133      0xdc3 build/obj/spi.o
+ .debug_line    0x00018ef6      0x8f7 build/obj/st.o
+ .debug_line    0x000197ed      0xd7d build/obj/usb.o
+ .debug_line    0x0001a56a      0x88d build/obj/nvic.o
+ .debug_line    0x0001adf7      0xaa9 build/obj/stm32_dma.o
+ .debug_line    0x0001b8a0      0x878 build/obj/hal_lld.o
+ .debug_line    0x0001c118      0xbeb build/obj/adc_lld.o
+ .debug_line    0x0001cd03      0x9ea build/obj/ext_lld_isr.o
+ .debug_line    0x0001d6ed      0xc4a build/obj/can_lld.o
+ .debug_line    0x0001e337      0x8b0 build/obj/ext_lld.o
+ .debug_line    0x0001ebe7      0xcec build/obj/sdc_lld.o
+ .debug_line    0x0001f8d3      0xa34 build/obj/dac_lld.o
+ .debug_line    0x00020307      0x88a build/obj/pal_lld.o
+ .debug_line    0x00020b91      0xcc0 build/obj/i2c_lld.o
+ .debug_line    0x00021851      0xf6b build/obj/usb_lld.o
+ .debug_line    0x000227bc      0x95b build/obj/i2s_lld.o
+ .debug_line    0x00023117      0xa7a build/obj/spi_lld.o
+ .debug_line    0x00023b91      0x9b5 build/obj/gpt_lld.o
+ .debug_line    0x00024546      0xa7f build/obj/pwm_lld.o
+ .debug_line    0x00024fc5      0x8eb build/obj/st_lld.o
+ .debug_line    0x000258b0      0xa38 build/obj/serial_lld.o
+ .debug_line    0x000262e8      0x873 build/obj/board.o
+ .debug_line    0x00026b5b      0x9e3 build/obj/chprintf.o
+ .debug_line    0x0002753e      0x12e ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_common_tables.o)
+ .debug_line    0x0002766c      0x77e ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cfft_f32.o)
+ .debug_line    0x00027dea      0x20f ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cmplx_mag_f32.o)
+ .debug_line    0x00027ff9       0x98 ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_bitreversal2.o)
+ .debug_line    0x00028091      0x67a ../../lib/e-puck2_main-processor/libarm_cortexM4lf_math.a(arm_cfft_radix8_f32.o)
 
 .debug_str      0x00000000     0x86ff
  .debug_str     0x00000000     0x2485 build/obj/main.o
