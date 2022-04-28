@@ -1,2 +1,5 @@
 /build/
 /.settings/
+/.dep/
+/libssp.a
+/libssp_nonshared.a
