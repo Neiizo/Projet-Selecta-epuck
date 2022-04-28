@@ -11,6 +11,8 @@
 #include <fft.h>
 #include <arm_math.h>
 
+#include <leds.h>
+
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 
@@ -167,10 +169,17 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			tmp_index =0;
 		}
 
-//		if(frequency > 140 && frequency < 160)
-//		{
-//
-//		}
+		if(frequency > 450 && frequency < 550)
+		{
+			// code pour rigoler led mdr lol
+			set_body_led(1);
+			chThdSleep(500);
+			set_body_led(0);
+		}
+		if(frequency > 650 && frequency < 750)
+		{
+			set_rgb_led(LED7, 100, 100, 100);
+		}
 	}
 }
 

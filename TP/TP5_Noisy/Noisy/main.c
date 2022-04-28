@@ -16,6 +16,8 @@
 #include <communications.h>
 #include <arm_math.h>
 
+#include <spi_comm.h>
+
 #define value1 50 //Hz
 #define value2 150 //Hz
 #define BUFFER_OUTPUT LEFT_OUTPUT //modifiable
@@ -84,6 +86,8 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
+
+    spi_comm_start();
 
     //appel de sound_remote avec data (initialiser data ? ok recup valeurs?)
 //       struct Fourier data;

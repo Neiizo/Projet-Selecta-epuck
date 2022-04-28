@@ -108,6 +108,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 			width = detection(image);
 			//PXTOCM = data.width/realLineSize;
 			distance_cm = PXTOCM/width;
+			// ici faire pour différentes lignes
 			chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, Position = %d, width = %d\n", distance_cm, line_pos, width);
 
 //			chprintf((BaseSequentialStream *)&SDU1, "Position = %d, width = %d\n", data.pos, data.width);
