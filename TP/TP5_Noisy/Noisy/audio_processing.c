@@ -160,7 +160,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			temp = 0;
 			chBSemSignal(&sendToComputer_sem);
 
-			frequency = (float)(pos_tmp*8); // optimiser en faisant une recherche sur le domaine qui nous interesse, par exemple entre 100 et 1000Hz.
+			frequency = (float)pos_tmp*8.005 + 20; // optimiser en faisant une recherche sur le domaine qui nous interesse, par exemple entre 100 et 1000Hz.
 			chprintf((BaseSequentialStream *)&SDU1, "freq %f\n", frequency);
 
 			current_max =0;
