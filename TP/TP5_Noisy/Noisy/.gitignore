@@ -3,3 +3,5 @@
 /.dep/
 /libssp.a
 /libssp_nonshared.a
+/.cproject
+/.project

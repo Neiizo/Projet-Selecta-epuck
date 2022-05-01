@@ -11,18 +11,29 @@
 #include <process_image.h>
 
 static uint16_t sampling_time = 0 ;
-static const float Kp = 0; // mettre en define ?
-static const float Ki = 0;
 
 uint16_t pi_regulator(float distance, float goal_dist){
+
 	float erreur = 0;
 	float vitesse = 0;
 
 	static float somme_erreurs = 0;
 
-	erreur = goal_dist - distance ;
+	erreur = - goal_dist + distance ;
+
+	if(fabs(erreur) < ERROR_THRESHOLD){
+		return 0;
+	}
 
 	somme_erreurs += erreur;
+
+	if(somme_erreurs > MAX_SUM_ERROR){
+		somme_erreurs = MAX_SUM_ERROR;
+	}
+    else if(somme_erreurs < -MAX_SUM_ERROR)
+    {
+    	somme_erreurs = -MAX_SUM_ERROR;
+    }
 
 	vitesse = Kp * erreur + Ki * somme_erreurs;
 
@@ -48,17 +59,20 @@ static THD_FUNCTION(PiRegulator, arg) {
 		*	To complete
 		*/
         speed = pi_regulator(get_distance_cm(), 10);
-        speed_correction = (get_line_pos(), IMAGE_BUFFER_SIZE/2);
+        speed_correction = (get_line_pos() - IMAGE_BUFFER_SIZE/2);
 
         if(abs(speed_correction) < ROTATION_THRESHOLD){
         	speed_correction = 0;
         }
 
+
+
+
 //        chThdSleep(sampling_time);
         
         //applies the speed from the PI regulator
-		 right_motor_set_speed(speed);
-		 left_motor_set_speed(speed);
+		 right_motor_set_speed(speed - ROTATION_COEFF * speed_correction);
+		 left_motor_set_speed(speed + ROTATION_COEFF * speed_correction);
 
         //100Hz
         chThdSleepUntilWindowed(time, time + MS2ST(10));
