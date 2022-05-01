@@ -10,10 +10,15 @@
 #define BITRED  15
 #define BITGREEN  10
 #define BITBLUE  4
+#define NB_BAR 3
+#define ERROR_PIXEL 20
 
 static float distance_cm = 0;
 static float PXTOCM = 1400;
 static uint16_t line_pos =0;
+static uint32_t posList[NB_BAR*2];
+
+
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 
@@ -46,13 +51,12 @@ static THD_FUNCTION(CaptureImage, arg) {
     }
 }
 
-
-
 uint16_t detection(uint8_t *image){
-	uint16_t width = 0;
 	bool found = 0;
 	uint8_t count =0;
 	uint32_t moy=0;
+	uint8_t lineCount = 0;
+	bool codeStart =0;
 	for(unsigned int i=0; i < IMAGE_BUFFER_SIZE; i++){
 		moy += image[i];
 		count++;
@@ -63,21 +67,57 @@ uint16_t detection(uint8_t *image){
 			{
 				if(found == 0)
 				{
-					line_pos= i-count+1;
+					if(!codeStart)
+					{
+						codeStart = 1;
+						line_pos= i-count+1;
+					}
+					posList[2*lineCount] = i;
 					found = 1;
 				}
-				width +=count;
 			}
 			else if((found == 1) && (moy > 5))
 			{
-				return width;
+				found = 0;
+				lineCount ++;
+				posList[2*lineCount-1] = i;
+				if(lineCount == NB_BAR)
+				{
+					return i-line_pos;
+				}
 			}
 			moy =0;
 			count=0;
 		}
 	}
-	return 0;
+	return 0; // ajouter un message d'erreur ou ajouter un retour de la largeur actuelle
 }
+
+uint8_t detect_codebarre(uint32_t width)
+{
+	uint8_t width_1 = posList[1]- posList[0];
+	uint8_t width_2 = posList[3]- posList[2];
+	uint8_t width_3 = posList[5]- posList[4];
+
+	float big_width = (float)width*1.2/3.9;
+	float small_width = (float)width*0.6/3.9;
+	uint8_t code = 0b000;
+	if((width_1 < big_width+ERROR_PIXEL)&&(width_1 > big_width-ERROR_PIXEL))
+	{
+		code |= 0b100;
+	}
+	if((width_2 < big_width+ERROR_PIXEL)&&(width_2 > big_width-ERROR_PIXEL))
+	{
+		code |= 0b010;
+	}
+	if((width_3 < big_width+ERROR_PIXEL)&&(width_3 > big_width-ERROR_PIXEL))
+	{
+		code |= 0b001;
+	}
+	return code ;
+}
+
+
 
 static THD_WORKING_AREA(waProcessImage, 1024);
 static THD_FUNCTION(ProcessImage, arg) {
@@ -99,27 +139,42 @@ static THD_FUNCTION(ProcessImage, arg) {
 		boucle = !boucle;
 		if (boucle) {
 			for(unsigned int i = 0; i < IMAGE_BUFFER_SIZE; ++i){
-//				image[i] = img_buff_ptr[2*i+1];
-//				image[i] &= 0b00011111; // blue
+				image[i] = img_buff_ptr[2*i+1];
+				image[i] &= 0b00011111; // blue
 
-				temp = img_buff_ptr[2*i+1];
-				temp = temp >> 5;
-				temp &= 0b00000111;
-				image[i] = temp;
-				temp = img_buff_ptr[2*i];
-				temp = temp << 3;
-				temp &= 0b00111000;
-				image[i] |= temp;
+//				temp = img_buff_ptr[2*i+1];
+//				temp = temp >> 5;
+//				temp &= 0b00000111;
+//				image[i] = temp;
+//				temp = img_buff_ptr[2*i];
+//				temp = temp << 3;
+//				temp &= 0b00111000;
+//				image[i] |= temp;
 
 //				image[i] =img_buff_ptr[2*i]>>3;
 //				image[i] &= 0b00011111; //rouge
 			}
-//			width = detection(image);
-//			//PXTOCM = data.width/realLineSize;
-//			distance_cm = PXTOCM/width;
-//			// ici faire pour différentes lignes
-//			chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, Position = %d, width = %d\n", distance_cm, line_pos, width);
+			width = detection(image);
+			if(width ==0)
+			{
+				chprintf((BaseSequentialStream *)&SDU1, "Distance not found\n");
 
+			}
+			else
+			{
+				distance_cm = PXTOCM/width;
+				distance_cm = distance_cm*1.925;
+				// ici faire pour différentes lignes
+				uint8_t code = detect_codebarre(width);
+
+//				uint8_t width_1 = posList[1]- posList[0];
+//				uint8_t width_2 = posList[3]- posList[2];
+//				uint8_t width_3 = posList[5]- posList[4];
+
+				chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, code = %d\n", distance_cm, code);
+//				chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, width1 = %d, width2 = %d, width3 = %d\n", distance_cm, width_1, width_2, width_3);
+
+			}
 			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE); // x pixels * 2 bytes !!!
 		}
     }
