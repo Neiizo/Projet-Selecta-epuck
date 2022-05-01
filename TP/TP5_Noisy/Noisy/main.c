@@ -20,7 +20,7 @@
 
 #define value1 50 //Hz
 #define value2 150 //Hz
-#define BUFFER_OUTPUT LEFT_OUTPUT //modifiable
+
 
 //static struct ID
 //{
@@ -89,20 +89,6 @@ int main(void)
 
     spi_comm_start();
 
-    //appel de sound_remote avec data (initialiser data ? ok recup valeurs?)
-//       struct Fourier data;
-//       struct ID identite;
-//       static int frequency = 0;
-//       static int choice = 0;
-
-       //récupérer la data ici mais jsp comment ptn de sa daronne => on aimerait les 2
-       //faudrait une boucle pour get l'index
-//       data.amplitude = get_audio_buffer_ptr(LEFT_OUTPUT);
-//       data.position = get_position_freq();
-//
-//    frequency =(float) 150 - abs(data.position)*150/512; //position = pos sur fourier
-//   	chprintf((BaseSequentialStream *)&SDU1, "frequence = %d\n", choice);
-
     //send_tab is used to save the state of the buffer to send (double buffering)
    	static complex_float temp_tab[FFT_SIZE];
     //to avoid modifications of the buffer while sending it
@@ -112,6 +98,7 @@ int main(void)
     //starts the microphones processing thread.
     //it calls the callback given in parameter when samples are ready
     mic_start(&processAudioData);
+    mic_init();
 #endif  /* SEND_FROM_MIC */
 
     /* Infinite loop. */

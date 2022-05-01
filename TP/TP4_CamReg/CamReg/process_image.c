@@ -95,23 +95,30 @@ static THD_FUNCTION(ProcessImage, arg) {
         //gets the pointer to the array filled with the last image in RGB565
 		img_buff_ptr = dcmi_get_last_image_ptr();
 
-		/*
-		*	To complete
-		*/
+		uint8_t temp = 0;
 		boucle = !boucle;
 		if (boucle) {
 			for(unsigned int i = 0; i < IMAGE_BUFFER_SIZE; ++i){
-				image[i] = img_buff_ptr[2*i+1];
-				image[i] &= 0b00011111;
+//				image[i] = img_buff_ptr[2*i+1];
+//				image[i] &= 0b00011111; // blue
 
+				temp = img_buff_ptr[2*i+1];
+				temp = temp >> 5;
+				temp &= 0b00000111;
+				image[i] = temp;
+				temp = img_buff_ptr[2*i];
+				temp = temp << 3;
+				temp &= 0b00111000;
+				image[i] |= temp;
+
+//				image[i] =img_buff_ptr[2*i]>>3;
+//				image[i] &= 0b00011111; //rouge
 			}
-			width = detection(image);
-			//PXTOCM = data.width/realLineSize;
-			distance_cm = PXTOCM/width;
-			// ici faire pour différentes lignes
-			chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, Position = %d, width = %d\n", distance_cm, line_pos, width);
-
-//			chprintf((BaseSequentialStream *)&SDU1, "Position = %d, width = %d\n", data.pos, data.width);
+//			width = detection(image);
+//			//PXTOCM = data.width/realLineSize;
+//			distance_cm = PXTOCM/width;
+//			// ici faire pour différentes lignes
+//			chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, Position = %d, width = %d\n", distance_cm, line_pos, width);
 
 			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE); // x pixels * 2 bytes !!!
 		}
