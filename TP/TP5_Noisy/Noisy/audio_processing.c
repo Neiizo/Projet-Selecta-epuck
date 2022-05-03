@@ -26,7 +26,7 @@ static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
-static float mic_used[FFT_SIZE];
+static float mic_used[2*FFT_SIZE];
 
 static int16_t max_norm_index = -1; //pour la récupérer
 
@@ -38,6 +38,10 @@ static int16_t max_norm_index = -1; //pour la récupérer
 #define FREQ_RIGHT		23	//359HZ
 #define FREQ_BACKWARD	26	//406Hz
 #define MAX_FREQ		500	//we don't analyze after this index to not use resources for nothing
+#define LEFT 			1
+#define RIGHT	 		2
+#define FRONT			3
+#define BACK 			4
 #define MIC				LEFT //Lets you choose which mic you want to work with
 
 // faire un define qui nous permettrait de changer le micro quon utilise
@@ -60,28 +64,28 @@ static int16_t max_norm_index = -1; //pour la récupérer
 *	uint16_t num_samples	Tells how many data we get in total (should always be 640)
 */
 
-void mic_init()
-{
-	switch(MIC)
-	{
-	case LEFT:
-		mic_used = micLeft_cmplx_input;
-		break;
-	case RIGHT:
-		mic_used = micRight_cmplx_input;
-		break;
-	case FRONT:
-		mic_used = micFront_cmplx_input;
-		break;
-	case BACK:
-		mic_used = micBackcmplx_input;
-		break;
-	}
-}
+//void mic_init()
+//{
+//	switch(MIC)
+//	{
+//	case LEFT:
+//		mic_used = micLeft_cmplx_input;
+//		break;
+//	case RIGHT:
+//		mic_used = micRight_cmplx_input;
+//		break;
+//	case FRONT:
+//		mic_used = micFront_cmplx_input;
+//		break;
+//	case BACK:
+//		mic_used = micBack_cmplx_input;
+//		break;
+//	}
+//}
 
 uint16_t get_position_freq()
 {
-	return mic_used[max_norm_index];
+	return micLeft_cmplx_input[max_norm_index];
 }
 
 static float current_max =0;  //faire une remise a 0 plus clean que ca
@@ -161,7 +165,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		micFront_cmplx_input[2*size+1] = 0;
 		size++;
 
-		pos_tmp = detectPeak2(mic_used[2*size], 2*size);// we do it here to avoid double checking the table of input.
+		pos_tmp = detectPeak2(micLeft_cmplx_input[2*size], 2*size);// we do it here to avoid double checking the table of input.
 
 		if(size >= FFT_SIZE)
 		{
@@ -171,8 +175,8 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 	if(size >= FFT_SIZE)
 	{
-		doFFT_optimized(FFT_SIZE, mic_used);
-		arm_cmplx_mag_f32(mic_used, micLeft_output, FFT_SIZE);
+		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
+		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 		size = 0;
 		temp++;
 		if(pos_tmp < 1 && pos_tmp > FFT_SIZE)

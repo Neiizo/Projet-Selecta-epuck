@@ -1,7 +1,9 @@
 import processing.sound.*;
 Pulse pulse;
+PImage img;
 
-public static class dim {
+
+  public static class dim {
   public static float edge_x;
   public static float edge_y;
   public static float size_x;
@@ -20,22 +22,45 @@ void setup() {
   dim.size_y = 2*dim.edge_y;
   dim.space_y = 3*height/13;
   dim.menu_y = 3*height/14;
+  //insertion image 
+  size(400,400);
+  img = loadImage("snickers.JPG");
 }
 
 void draw() {
   float tmp =0;
   background(204);
-  fill( 200,100,0);
+  fill( 15, 5, 107);
   rect(0, 0, width, dim.menu_y);
-  
+
   for (int i=0; i<3; ++i)
   {
-    fill( 0, 100, 100);
+    fill( 15, 5, 107);
     tmp = dim.edge_y + (i+1)*dim.space_y;
     rect(dim.edge_x, tmp, dim.size_x, dim.size_y); // Left
     rect(width - dim.edge_x - dim.size_x, tmp, dim.size_x, dim.size_y); // Left
   }
-
+  fill(255, 255, 255);
+  textSize(150);
+  textAlign(CENTER);
+  text("MENU", width/2, 300);
+  
+  //bouton de start et reset 
+  //  text("M", width/(6.5), 1100);
+  // 1) 890 2)1400 3)1910 //1.8 
+  fill(255,255,255);
+  textSize(100);
+  textAlign(LEFT);
+  text("START", width/(6.4), 890);
+ 
+  fill(255,255,255);
+  textSize(100);
+  textAlign(RIGHT);
+  text("RESET", width/(1.19), 890);
+  
+  image(img, 175, 1220, width/4, height/8);
+  
+  
   if (mousePressed) {
     checkPosPress();
   }
@@ -65,5 +90,5 @@ void generateSound(int id) {
   pulse.play();
   pulse.freq(freqTable[id]);
   delay(50);
-  pulse.stop(); 
+  pulse.stop();
 }
