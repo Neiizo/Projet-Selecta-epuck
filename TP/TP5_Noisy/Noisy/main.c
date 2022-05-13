@@ -1,53 +1,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "ch.h"
 #include "hal.h"
 #include "memory_protection.h"
 #include <usbcfg.h>
 #include <main.h>
-#include <chprintf.h>
 #include <motors.h>
 #include <audio/microphone.h>
+#include <camera/po8030.h>
+#include <chprintf.h>
 
+#include <pi_regulator.h>
+#include <process_image.h>
 #include <audio_processing.h>
 #include <fft.h>
 #include <communications.h>
 #include <arm_math.h>
-
 #include <spi_comm.h>
 
-#define value1 50 //Hz
-#define value2 150 //Hz
+#define GOAL 			10.0f
+#define DEMITOUR 		1
+#define QUARTDROITE 	2
+#define QUARTGAUCHE 	3
+#define PI 				3.1415926536f
+#define WHEELDISTANCE	5.35f
+#define PERIMETRE		(PI*WHEELDISTANCE)
+#define DEFAULT_SPEED 	1000 //1000
+#define WHEEL_PERIMETER 13.0f
+#define CMTOSTEP		1000/13.0f
 
+#define PATH1			1
+#define PATH2 			2
+#define PATH3			3
+#define NO_PATH 		0
+#define ERROR_TRAVEL	1.0f //cm
 
-<<<<<<< Updated upstream
-//static struct ID
-//{
-//	int code;	// sert à savoir quel code on va chercher;
-//	float sequence;
-//};
-//
-//
-//static struct Fourier
-//{
-//	float* amplitude;
-//	int16_t position;
-//};
-=======
 static float distance_step = 0;
 static float tof = 0;
 static uint8_t rotation =0;
->>>>>>> Stashed changes
 
-//uncomment to send the FFTs results from the real microphones
 #define SEND_FROM_MIC
 
-
-
-//uncomment to use double buffering to send the FFT to the computer
-//#define DOUBLE_BUFFERING
+void SendUint8ToComputer(uint8_t* data, uint16_t size)
+{
+	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)"START", 5);
+	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)&size, sizeof(uint16_t));
+	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)data, size);
+}
 
 static void serial_start(void)
 {
@@ -60,18 +62,14 @@ static void serial_start(void)
 
 	sdStart(&SD3, &ser_cfg); // UART3.
 }
-
+//utilité du timer ?
 static void timer12_start(void){
-    //General Purpose Timer configuration   
-    //timer 12 is a 16 bit timer so we can measure time
-    //to about 65ms with a 1Mhz counter
     static const GPTConfig gpt12cfg = {
         1000000,        /* 1MHz timer clock in order to measure uS.*/
         NULL,           /* Timer callback.*/
         0,
         0
     };
-
     gptStart(&GPTD12, &gpt12cfg);
     //let the timer count to max value
     gptStartContinuous(&GPTD12, 0xFFFF);
@@ -79,60 +77,26 @@ static void timer12_start(void){
 
 int main(void)
 {
-
+	// initialisations :
     halInit();
     chSysInit();
     mpu_init();
-
     //starts the serial communication
     serial_start();
-    //starts the USB communication
+    //start the USB communication
     usb_start();
     //starts timer 12
     timer12_start();
-    //inits the motors
-    motors_init();
-
+    //starts the camera
+    dcmi_start();
+	po8030_start();
+	//inits the motors
+	motors_init();
     spi_comm_start();
 
-    //send_tab is used to save the state of the buffer to send (double buffering)
-   	static complex_float temp_tab[FFT_SIZE];
-    //to avoid modifications of the buffer while sending it
-    static float send_tab[FFT_SIZE];
-
-#ifdef SEND_FROM_MIC
-    //starts the microphones processing thread.
-    //it calls the callback given in parameter when samples are ready
+	chThdSleepSeconds(3);
     mic_start(&processAudioData);
-//    mic_init();
-#endif  /* SEND_FROM_MIC */
 
-<<<<<<< Updated upstream
-    /* Infinite loop. */
-    while (1) {
-#ifdef SEND_FROM_MIC
-        //waits until a result must be sent to the computer
-        wait_send_to_computer();
-#ifdef DOUBLE_BUFFERING
-        //we copy the buffer to avoid conflicts
-        arm_copy_f32(get_audio_buffer_ptr(LEFT_OUTPUT), send_tab, FFT_SIZE);
-        SendFloatToComputer((BaseSequentialStream *) &SD3, send_tab, FFT_SIZE);
-#else
-        SendFloatToComputer((BaseSequentialStream *) &SD3, get_audio_buffer_ptr(LEFT_OUTPUT), FFT_SIZE);
-#endif  /* DOUBLE_BUFFERING */
-#else
-
-        float* bufferCmplxInput = get_audio_buffer_ptr(LEFT_CMPLX_INPUT);
-        float* bufferOutput = get_audio_buffer_ptr(LEFT_OUTPUT);
-
-        uint16_t size = ReceiveInt16FromComputer((BaseSequentialStream *) &SD3, bufferCmplxInput, FFT_SIZE);
-
-        if(size == FFT_SIZE){
-
-            doFFT_optimized(FFT_SIZE, bufferCmplxInput);
-
-            arm_cmplx_mag_f32(bufferCmplxInput, bufferOutput, FFT_SIZE);
-=======
     uint32_t count = 0;
     bool starter = 0 ;
 
@@ -240,13 +204,11 @@ void motor_rotation(void)
 	tof = rotation_step*4000/DEFAULT_SPEED;
 	right_motor_set_speed(speed);
 	left_motor_set_speed(-speed);
->>>>>>> Stashed changes
 
-            SendFloatToComputer((BaseSequentialStream *) &SD3, bufferOutput, FFT_SIZE);
-
-        }
-#endif  /* SEND_FROM_MIC */
-    }
+	chThdSleepMilliseconds(tof);
+	right_motor_set_speed(0);
+	left_motor_set_speed(0);
+	chprintf((BaseSequentialStream *)&SDU1, "TEST = %f, tof= %d\n", speed, (uint32_t)tof);
 }
 
 #define STACK_CHK_GUARD 0xe2dee396
@@ -254,5 +216,5 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
 void __stack_chk_fail(void)
 {
-    chSysHalt("Stack smashing detected");
+   chSysHalt("Stack smashing detected");
 }
