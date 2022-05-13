@@ -19,7 +19,7 @@ typedef enum {
 } BUFFER_NAME_t;
 
 
-void processAudioData(int16_t *data, uint16_t num_samples);
+void processAudioData(int16_t *data);
 
 /*
 *	put the invoking thread into sleep until it can process the audio datas
@@ -30,5 +30,11 @@ void wait_send_to_computer(void);
 *	Returns the pointer to the BUFFER_NAME_t buffer asked
 */
 float* get_audio_buffer_ptr(BUFFER_NAME_t name);
+
+void mic_wait(void);
+void mic_standby(void);
+bool get_ready_signal(void);
+void search_done(void);
+uint8_t get_code_audio(void);
 
 #endif /* AUDIO_PROCESSING_H */

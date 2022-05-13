@@ -32,6 +32,7 @@ static int16_t max_norm_index = -1; //pour la récupérer
 
 #define MIN_VALUE_THRESHOLD	10000
 
+<<<<<<< Updated upstream
 #define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
 #define FREQ_FORWARD	16	//250Hz
 #define FREQ_LEFT		19	//296Hz
@@ -43,8 +44,23 @@ static int16_t max_norm_index = -1; //pour la récupérer
 #define FRONT			3
 #define BACK 			4
 #define MIC				LEFT //Lets you choose which mic you want to work with
+=======
+#define MIN_POS 		0	//we don't analyze before this index to not use resources for nothing
+#define MIN_FREQ		15000
+#define BUENO			400 //Hz
+#define MARS 			500 //Hz
+#define SNICKERS		600 //Hz
+#define STOP_SEARCH		700 //Hz
+#define LOCK_SEARCH		900
+#define ERROR_FREQ		30  //Hz
+#define BUENO_CODE		2
+#define MARS_CODE		3
+#define SNICKERS_CODE	5
+#define STOP_CODE 		7
+#define NO_CODE 		0
+#define LOCK_CODE		8
+>>>>>>> Stashed changes
 
-// faire un define qui nous permettrait de changer le micro quon utilise
 
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
 #define FREQ_FORWARD_H		(FREQ_FORWARD+1)
@@ -83,6 +99,7 @@ static int16_t max_norm_index = -1; //pour la récupérer
 //	}
 //}
 
+<<<<<<< Updated upstream
 uint16_t get_position_freq()
 {
 	return micLeft_cmplx_input[max_norm_index];
@@ -91,6 +108,17 @@ uint16_t get_position_freq()
 static float current_max =0;  //faire une remise a 0 plus clean que ca
 static unsigned int tmp_index =0;
 unsigned int detectPeak2(float data, unsigned int index)
+=======
+
+static uint8_t search = NO_CODE;
+static bool waiting = 0;
+static bool locked = 0;
+static unsigned int size = 0;
+static float frequency = 0;
+static bool is_searching = 0;
+
+unsigned int detectPeak1(float *data)
+>>>>>>> Stashed changes
 {
 	if(data > current_max)
 	{
@@ -100,6 +128,7 @@ unsigned int detectPeak2(float data, unsigned int index)
 	return tmp_index;
 }
 
+<<<<<<< Updated upstream
 void sound_remote(float* data){
 	float max_norm = MIN_VALUE_THRESHOLD;
 
@@ -142,6 +171,9 @@ static unsigned int temp = 0;
 static unsigned int size = 0;
 static float frequency = 0;
 void processAudioData(int16_t *data, uint16_t num_samples){
+=======
+void processAudioData(int16_t *data){
+>>>>>>> Stashed changes
 
 	/*
 	*
@@ -178,6 +210,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 		size = 0;
+<<<<<<< Updated upstream
 		temp++;
 		if(pos_tmp < 1 && pos_tmp > FFT_SIZE)
 		{
@@ -214,6 +247,74 @@ void wait_send_to_computer(void){
 	chBSemWait(&sendToComputer_sem);
 }
 
+=======
+		pos_tmp = detectPeak1(micLeft_output);
+			
+		frequency = pos_tmp*15.1925; 
+
+		if(!waiting && frequency !=0 && !locked) // FAIRE UN LIEN ENTRE LOCK ET GO SEARCHING
+		{
+			chprintf((BaseSequentialStream *)&SDU1, "frequency = %f\n", frequency);
+			if(frequency > SNICKERS - ERROR_FREQ && frequency < SNICKERS + ERROR_FREQ)
+			{
+				search = SNICKERS_CODE;
+			}
+			else if(frequency > MARS - ERROR_FREQ && frequency < MARS + ERROR_FREQ)
+			{
+				search = MARS_CODE;
+			}
+			else if(frequency > BUENO - ERROR_FREQ && frequency < BUENO + ERROR_FREQ)
+			{
+				search = BUENO_CODE;
+			}
+			else if(frequency > LOCK_SEARCH - ERROR_FREQ && frequency < LOCK_SEARCH + ERROR_FREQ)
+			{
+				search = LOCK_CODE;
+			}
+			else
+			{
+				search = NO_CODE;
+			}
+		}
+		
+		if(frequency > STOP_SEARCH - ERROR_FREQ && frequency < STOP_SEARCH + ERROR_FREQ)
+		{
+			search = STOP_CODE;
+			is_searching = 0; //utilité?
+			locked = FALSE;
+		}
+		if(search == LOCK_CODE)
+		{
+			locked = TRUE;
+		}
+		else if(search != NO_CODE && search != STOP_CODE)
+		{
+			is_searching = TRUE;
+		}
+	}
+}
+
+void mic_wait(void){
+	waiting = TRUE;
+}
+
+void mic_standby(void){
+	search = NO_CODE;
+	is_searching = FALSE;
+	waiting = FALSE;
+}
+
+bool get_ready_signal(void)
+{
+	return is_searching;
+}
+
+uint8_t get_code_audio(void)
+{
+	return search;
+}
+
+>>>>>>> Stashed changes
 float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 	if(name == LEFT_CMPLX_INPUT){
 		return micLeft_cmplx_input;

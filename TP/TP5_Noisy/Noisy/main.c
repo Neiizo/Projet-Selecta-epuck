@@ -22,6 +22,7 @@
 #define value2 150 //Hz
 
 
+<<<<<<< Updated upstream
 //static struct ID
 //{
 //	int code;	// sert à savoir quel code on va chercher;
@@ -34,6 +35,11 @@
 //	float* amplitude;
 //	int16_t position;
 //};
+=======
+static float distance_step = 0;
+static float tof = 0;
+static uint8_t rotation =0;
+>>>>>>> Stashed changes
 
 //uncomment to send the FFTs results from the real microphones
 #define SEND_FROM_MIC
@@ -101,6 +107,7 @@ int main(void)
 //    mic_init();
 #endif  /* SEND_FROM_MIC */
 
+<<<<<<< Updated upstream
     /* Infinite loop. */
     while (1) {
 #ifdef SEND_FROM_MIC
@@ -125,6 +132,115 @@ int main(void)
             doFFT_optimized(FFT_SIZE, bufferCmplxInput);
 
             arm_cmplx_mag_f32(bufferCmplxInput, bufferOutput, FFT_SIZE);
+=======
+    uint32_t count = 0;
+    bool starter = 0 ;
+
+	process_image_start();
+
+    while (1) {
+
+    	if(get_ready_signal())
+    	{
+    		if(!starter)
+    		{
+    		mic_wait();
+    			// pi_regulator_start(); // changer le fonctionnement ici
+    			starter = 1;
+    			re_enable_pi_regulator();
+    		}
+
+    		count ++;
+    		if(!get_pi_status() || count == 10)
+    		{
+    			chThdSleepSeconds(3);
+
+				if(get_code_bar() == get_code_audio())
+				{
+					chprintf((BaseSequentialStream *)&SDU1, "weeeeeeeeeeeee\n");
+				}
+    			else{
+					chprintf((BaseSequentialStream *)&SDU1, "shieet\n");
+				}
+    			chThdSleepMilliseconds(100);
+    			disable_pi_regulator();
+    			mic_standby();
+				count = 0;
+    			starter = 0;
+    		}
+    	}
+		else
+		{
+    		chprintf((BaseSequentialStream *)&SDU1, "RESET\n");
+			count = 0;
+			starter = 0;
+			disable_pi_regulator();
+			mic_standby();
+		}
+
+        chThdSleepMilliseconds(1000);
+    }
+}
+
+void motor_distance(void)
+{
+    //chprintf((BaseSequentialStream *)&SDU1, "distance =%f, tof =  %f, distance_step = %f\n", GOAL, tof, distance_step);
+    
+    distance_step = GOAL *CMTOSTEP ; // conversion cm to step
+    tof = distance_step*1000/DEFAULT_SPEED; // computation of the duration
+    right_motor_set_speed(DEFAULT_SPEED);
+    left_motor_set_speed(DEFAULT_SPEED);
+    
+    chThdSleepMilliseconds(tof);
+    right_motor_set_speed(0);
+    left_motor_set_speed(0);
+
+}
+void motor_rotation(void)
+{
+	chprintf((BaseSequentialStream *)&SDU1, "motor rotation\n");
+	static bool flag =0;
+	static float speed =0;
+	static float rotation_cm =0;
+	switch(rotation){
+		case DEMITOUR :
+			rotation_cm = (float)PERIMETRE/2;//2
+			chprintf((BaseSequentialStream *)&SDU1, "1111\n");
+			break;
+		case QUARTDROITE :
+			rotation_cm = PERIMETRE/4;
+			chprintf((BaseSequentialStream *)&SDU1, "2222\n");
+			if(flag)
+			{
+				rotation_cm = 2* rotation_cm;
+				flag = 0;
+			}
+			else
+			{
+				flag = 1; // rendre plus opti
+			}
+			break;
+		case QUARTGAUCHE :
+			rotation_cm = (float)-PERIMETRE/4;
+			chprintf((BaseSequentialStream *)&SDU1, "3333\n");
+			if(flag)
+			{
+				rotation_cm = 2* rotation_cm;
+						flag = 0;
+			}
+			else
+			{
+				flag = 1; // rendre plus opti
+			}
+			break;
+	}
+	static float rotation_step;
+	rotation_step = rotation_cm*1000/WHEEL_PERIMETER ; // conversion cm to step
+	speed = DEFAULT_SPEED*rotation_step/fabs(rotation_step);
+	tof = rotation_step*4000/DEFAULT_SPEED;
+	right_motor_set_speed(speed);
+	left_motor_set_speed(-speed);
+>>>>>>> Stashed changes
 
             SendFloatToComputer((BaseSequentialStream *) &SD3, bufferOutput, FFT_SIZE);
 

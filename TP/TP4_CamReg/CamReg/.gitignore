@@ -1,7 +1,0 @@
-/build/
-/.dep/
-/settings/
-/.cproject
-/.project
-/libssp.a
-/libssp_nonshared.a
