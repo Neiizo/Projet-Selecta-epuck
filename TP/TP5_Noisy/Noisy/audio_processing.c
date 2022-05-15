@@ -32,18 +32,21 @@ static int16_t max_norm_index = -1; //index
 
 #define MIN_POS 		0	//we don't analyze before this index to not use resources for nothing
 #define MIN_FREQ		15000
-#define BUENO			400 //Hz
-#define MARS 			500 //Hz
-#define SNICKERS		600 //Hz
-#define STOP_SEARCH		700 //Hz
-#define LOCK_SEARCH		900
-#define ERROR_FREQ		30  //Hz
-#define BUENO_CODE		2
-#define MARS_CODE		3
-#define SNICKERS_CODE	5
-#define STOP_CODE 		7
+#define BUENO			400 	//Hz
+#define MARS 			600 	//Hz
+#define SNICKERS		500 	//Hz
+#define STOP_SEARCH		700 	//Hz
+#define UNLOCK_SEARCH	900		//Hz  AJUSTER FREQ
+#define LOCK_SEARCH		1100	//Hz
+#define ERROR_FREQ		30  	//Hz
 #define NO_CODE 		0
+#define BUENO_CODE		2
+#define SNICKERS_CODE	5
+#define MARS_CODE		6
+#define STOP_CODE 		7
 #define LOCK_CODE		8
+
+//#define DEBUG_AUDIO
 
 
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
@@ -112,7 +115,6 @@ void processAudioData(int16_t *data){
 
 		if(!waiting && frequency !=0 && !locked) // FAIRE UN LIEN ENTRE LOCK ET GO SEARCHING
 		{
-			chprintf((BaseSequentialStream *)&SDU1, "frequency = %f\n", frequency);
 			if(frequency > SNICKERS - ERROR_FREQ && frequency < SNICKERS + ERROR_FREQ)
 			{
 				search = SNICKERS_CODE;
@@ -135,9 +137,14 @@ void processAudioData(int16_t *data){
 			}
 		}
 		
-		if(frequency > STOP_SEARCH - ERROR_FREQ && frequency < STOP_SEARCH + ERROR_FREQ)
+		if(frequency > STOP_SEARCH - ERROR_FREQ && frequency < STOP_SEARCH + ERROR_FREQ && !locked)
 		{
 			search = STOP_CODE;
+			is_searching = 0; //utilité?
+		}
+		if(frequency > UNLOCK_SEARCH - ERROR_FREQ && frequency < UNLOCK_SEARCH + ERROR_FREQ)
+		{
+			search = NO_CODE;
 			is_searching = 0; //utilité?
 			locked = FALSE;
 		}
@@ -149,6 +156,12 @@ void processAudioData(int16_t *data){
 		{
 			is_searching = TRUE;
 		}
+#ifdef DEBUG_AUDIO
+		{
+			chprintf((BaseSequentialStream *)&SDU1, "frequency = %f\n", frequency);
+			chprintf((BaseSequentialStream *)&SDU1, "CODE %d\n", search);
+		}
+#endif
 	}
 }
 
@@ -157,7 +170,10 @@ void mic_wait(void){
 }
 
 void mic_standby(void){
-	search = NO_CODE;
+	if(search != LOCK_CODE)
+	{
+		search = NO_CODE;
+	}
 	is_searching = FALSE;
 	waiting = FALSE;
 }

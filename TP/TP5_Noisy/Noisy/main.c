@@ -38,6 +38,8 @@
 #define NO_PATH 		0
 #define ERROR_TRAVEL	1.0f //cm
 
+//#define DEBUG_NO_PI
+
 static float distance_step = 0;
 static float tof = 0;
 static uint8_t rotation =0;
@@ -109,22 +111,34 @@ int main(void)
     		if(!starter)
     		{
     		mic_wait();
-    			// pi_regulator_start(); // changer le fonctionnement ici
+#ifndef DEBUG_NO_PI
+    		{
+    			pi_regulator_start(); // changer le fonctionnement ici
+    		}
+#endif
     			starter = 1;
     			re_enable_pi_regulator();
     		}
-
+#ifdef DEBUG_NO_PI
+    		{
+    			count++;
+    		}
+#else
+    		{
+    			count = -1;
+    		}
+#endif
     		count ++;
-    		if(!get_pi_status() || count == 10)
+    		if(!get_pi_status() || count == 20)
     		{
     			chThdSleepSeconds(3);
 
 				if(get_code_bar() == get_code_audio())
 				{
-					chprintf((BaseSequentialStream *)&SDU1, "weeeeeeeeeeeee\n");
+					blink_led_found();
 				}
     			else{
-					chprintf((BaseSequentialStream *)&SDU1, "shieet\n");
+    				blink_led_error();
 				}
     			chThdSleepMilliseconds(100);
     			disable_pi_regulator();
@@ -144,6 +158,27 @@ int main(void)
 
         chThdSleepMilliseconds(1000);
     }
+}
+
+
+void blink_led_error(void)
+{
+	set_rgb_led(0,255,0,0);
+	set_rgb_led(1,255,0,0);
+	set_rgb_led(2,255,0,0);
+	set_rgb_led(3,255,0,0);
+	chThdSleepSeconds(3);
+	set_rgb_led(0,0,0,0);
+	set_rgb_led(1,0,0,0);
+	set_rgb_led(2,0,0,0);
+	set_rgb_led(3,0,0,0);
+}
+
+void blink_led_found(void)
+{
+	set_body_led(1);
+	chThdSleepSeconds(3);
+	set_body_led(0);
 }
 
 void motor_distance(void)

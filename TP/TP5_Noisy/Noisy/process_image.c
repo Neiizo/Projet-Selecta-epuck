@@ -13,7 +13,9 @@
 #define NB_BAR 			3
 #define ERROR_PIXEL		20
 #define INDEX_MIN  		50	
-#define MIN_INTENSITY 	5
+#define MIN_INTENSITY 	15
+
+//#define DEBUG_IMAGE
 
 static float distance_cm = 0;
 static float PXTOCM = 1400;
@@ -66,7 +68,7 @@ uint16_t detection(uint8_t *image){
 		if(count == 5)
 		{
 			moy = moy/count;
-			if(moy <MIN_INTENSITY)
+			if(moy > MIN_INTENSITY)
 			{
 				if(found == 0)
 				{
@@ -79,7 +81,7 @@ uint16_t detection(uint8_t *image){
 					found = 1;
 				}
 			}
-			else if((found == 1) && (moy > MIN_INTENSITY))
+			else if((found == 1) && (moy < MIN_INTENSITY))
 			{
 				found = 0;
 				lineCount ++;
@@ -101,7 +103,7 @@ uint8_t detect_codebarre(uint32_t width) // OPTIMISER
 	uint8_t width_1 = posList[1]- posList[0];
 	uint8_t width_2 = posList[3]- posList[2];
 	uint8_t width_3 = posList[5]- posList[4];
-
+	code = 0b000;
 	float big_width = (float)width*1.2/3.9;
 	float small_width = (float)width*0.6/3.9;
 	if((width_1 < big_width+ERROR_PIXEL)&&(width_1 > big_width-ERROR_PIXEL))
@@ -116,6 +118,12 @@ uint8_t detect_codebarre(uint32_t width) // OPTIMISER
 	{
 		code |= 0b001;
 	}
+#ifdef DEBUG_IMAGE
+	{
+		chprintf((BaseSequentialStream *)&SDU1, "width1 = %d, width3 = %d, width3 = %d, code = %d\n", width_1, width_2, width_3, code);
+	}
+#endif
+
 	return code ;
 }
 
@@ -144,20 +152,28 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 			}
 			width = detection(image);
+
 			if(width ==0)
 			{
-				chprintf((BaseSequentialStream *)&SDU1, "Distance not found\n");
-
+#ifdef DEBUG_IMAGE
+				{
+					chprintf((BaseSequentialStream *)&SDU1, "Distance not found\n");
+				}
+#endif
+// ajouter un comportement du robot dans ce cas la
 			}
 			else
 			{
 				distance_cm = PXTOCM/width*1.925;
 
 				uint8_t code = detect_codebarre(width);
-//				chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, code = %d\n", distance_cm, code);
-
+#ifdef DEBUG_IMAGE
+				{
+					chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, code = %d\n", distance_cm, code);
+				}
+#endif
 			}
-			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE); // x pixels * 2 bytes !!!
+			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE); // x pixels * 2 bytes !!! // enlever apres
 		}
     }
 }
