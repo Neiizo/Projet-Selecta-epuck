@@ -32,8 +32,7 @@ uint16_t pi_regulator(float distance, float goal_dist){
 	if(somme_erreurs > MAX_SUM_ERROR){
 		somme_erreurs = MAX_SUM_ERROR;
 	}
-    else if(somme_erreurs < -MAX_SUM_ERROR)
-    {
+    else if(somme_erreurs < -MAX_SUM_ERROR) {
     	somme_erreurs = -MAX_SUM_ERROR;
     }
 

@@ -75,7 +75,6 @@ int main(void){
 	motors_init();
     spi_comm_start();
 
-	chThdSleepSeconds(3);
     mic_start(&processAudioData);
 
     uint32_t count = 0;

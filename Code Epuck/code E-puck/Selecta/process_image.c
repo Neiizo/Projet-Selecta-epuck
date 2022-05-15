@@ -43,8 +43,6 @@ static THD_FUNCTION(CaptureImage, arg) {
 	dcmi_prepare();
 
     while(1){
-//    	systime_t time;
-//    	time = chVTGetSystemTime();// peut etre enlever
     	//starts a capture
 		dcmi_capture_start();
 		//waits for the capture to be done
@@ -90,7 +88,7 @@ uint16_t detection(uint8_t *image){
 			count=0;
 		}
 	}
-	return 0; // ajouter un message d'erreur ou ajouter un retour de la largeur actuelle
+	return 0;
 }
 
 uint8_t detect_codebarre(uint32_t width){
@@ -139,7 +137,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 		if (boucle) {
 			for(unsigned int i = 0; i < IMAGE_BUFFER_SIZE; ++i){
 				image[i] = img_buff_ptr[2*i+1];
-				image[i] &= 0b00011111; // blue
+				image[i] &= 0b00011111; // mask that lets the blue in
 			}
 			width = detection(image);
 
@@ -161,7 +159,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 				}
 #endif
 			}
-			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE); // x pixels * 2 bytes !!! // enlever apres
+			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
 		}
     }
 }
@@ -180,5 +178,5 @@ uint16_t get_line_pos(void){
 
 void process_image_start(void){
 	chThdCreateStatic(waProcessImage, sizeof(waProcessImage), NORMALPRIO, ProcessImage, NULL);
-	chThdCreateStatic(waCaptureImage, sizeof(waCaptureImage), NORMALPRIO, CaptureImage, NULL);//+2
+	chThdCreateStatic(waCaptureImage, sizeof(waCaptureImage), NORMALPRIO, CaptureImage, NULL);
 }

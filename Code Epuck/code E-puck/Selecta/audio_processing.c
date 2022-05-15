@@ -11,8 +11,6 @@
 #include <arm_math.h>
 #include <leds.h>
 
-//semaphore
-//static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -27,8 +25,8 @@ static float micBack_output[FFT_SIZE];
 
 #define MIN_VALUE_THRESHOLD	10000
 
-#define MIN_POS 		0	//we don't analyze before this index to not use resources for nothing
-#define MIN_FREQ		15000
+#define MIN_POS 		0		//can be adjusted to filter out low frequency while analysing the frequencies
+#define MIN_FREQ		15000 	//intensity
 #define BUENO			400 	//Hz
 #define MARS 			600 	//Hz
 #define SNICKERS		500 	//Hz
@@ -42,6 +40,7 @@ static float micBack_output[FFT_SIZE];
 #define MARS_CODE		6
 #define STOP_CODE 		7
 #define LOCK_CODE		8
+#define FREQ_ADJUST		15.1925
 
 //#define DEBUG_AUDIO
 
@@ -100,7 +99,7 @@ void processAudioData(int16_t *data){
 		size = 0;
 		pos_tmp = detectPeak1(micLeft_output);
 
-		frequency = pos_tmp*15.1925; 
+		frequency = pos_tmp*FREQ_ADJUST; 
 
 		if(!waiting && frequency !=0 && !locked){
 			if(frequency > SNICKERS - ERROR_FREQ && frequency < SNICKERS + ERROR_FREQ){
