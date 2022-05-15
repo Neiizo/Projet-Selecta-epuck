@@ -11,10 +11,9 @@
 
 #include <communications.h>
 
-//static uint16_t sampling_time = 0 ;
 static bool en_pi_regulator = 0;
+static bool stop_found = 0;
 
-static int teest = 0;
 uint16_t pi_regulator(float distance, float goal_dist){
 
 	float erreur = 0;
@@ -54,51 +53,48 @@ static THD_FUNCTION(PiRegulator, arg) {
     int16_t speed = 0;
     int16_t speed_correction = 0 ;
 
-    while(en_pi_regulator){
-    	teest++;
-    	chprintf((BaseSequentialStream *)&SDU1, "test = %d\n", teest);
+    while(1){
         time = chVTGetSystemTime();
 
-        speed = pi_regulator(get_distance_cm(), 10);
+        speed = pi_regulator(get_distance_cm(), GOAL_DISTANCE );
         speed_correction = (get_line_pos() - IMAGE_BUFFER_SIZE/2);
 
         if(abs(speed_correction) < ROTATION_THRESHOLD){
         	speed_correction = 0;
         }
 
-        if(speed < SPEED_MIN)
-        {
-        	en_pi_regulator = 0;
-        	right_motor_set_speed(0);
-        	left_motor_set_speed(0);
-        }
-
         //applies the speed from the PI regulator
-		 right_motor_set_speed(speed - ROTATION_COEFF * speed_correction);
-		 left_motor_set_speed(speed + ROTATION_COEFF * speed_correction);
+
+		 if(abs(speed) < SPEED_MIN && !stop_found){
+			 stop_found = 1;
+		 }
+		 if(!stop_found && en_pi_regulator) {
+			 right_motor_set_speed(speed - ROTATION_COEFF * speed_correction);
+			 left_motor_set_speed(speed + ROTATION_COEFF * speed_correction);
+		 }
 
         //100Hz
         chThdSleepUntilWindowed(time, time + MS2ST(10));
     }
 }
 
-void re_enable_pi_regulator(void)
-{
+void re_enable_pi_regulator(void){
 	en_pi_regulator = 1;
 }
-int get_test(void)
-{
-	return teest;
-}
 
-void disable_pi_regulator(void)
-{
+void disable_pi_regulator(void){
 	en_pi_regulator = 0;
+	stop_found = 0;
+	right_motor_set_speed(0);
+	left_motor_set_speed(0);
 }
 
-bool get_pi_status(void)
-{
+bool get_pi_status(void){
 	return en_pi_regulator;
+}
+
+bool get_found_status(void){
+	return stop_found;
 }
 
 

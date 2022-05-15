@@ -46,15 +46,13 @@ static uint8_t rotation =0;
 
 #define SEND_FROM_MIC
 
-void SendUint8ToComputer(uint8_t* data, uint16_t size)
-{
+void SendUint8ToComputer(uint8_t* data, uint16_t size){
 	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)"START", 5);
 	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)&size, sizeof(uint16_t));
 	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)data, size);
 }
 
-static void serial_start(void)
-{
+static void serial_start(void){
 	static SerialConfig ser_cfg = {
 	    115200,
 	    0,
@@ -77,8 +75,7 @@ static void timer12_start(void){
     gptStartContinuous(&GPTD12, 0xFFFF);
 }
 
-int main(void)
-{
+int main(void){
 	// initialisations :
     halInit();
     chSysInit();
@@ -103,19 +100,17 @@ int main(void)
     bool starter = 0 ;
 
 	process_image_start();
-
-    while (1) {
-
-    	if(get_ready_signal())
-    	{
+#ifndef DEBUG_NO_PI
+	{
+		pi_regulator_start();
+	}
+#endif
+    while (1)
+    {
+    	if(get_ready_signal()){
     		if(!starter)
     		{
-    		mic_wait();
-#ifndef DEBUG_NO_PI
-    		{
-    			pi_regulator_start(); // changer le fonctionnement ici
-    		}
-#endif
+    			mic_wait();
     			starter = 1;
     			re_enable_pi_regulator();
     		}
@@ -128,13 +123,9 @@ int main(void)
     			count = -1;
     		}
 #endif
-    		count ++;
-    		if(!get_pi_status() || count == 20)
-    		{
-    			chThdSleepSeconds(3);
+    		if(get_found_status() || count == 10){
 
-				if(get_code_bar() == get_code_audio())
-				{
+				if(get_code_bar() == get_code_audio()){
 					blink_led_found();
 				}
     			else{
@@ -147,9 +138,7 @@ int main(void)
     			starter = 0;
     		}
     	}
-		else
-		{
-    		chprintf((BaseSequentialStream *)&SDU1, "RESET\n");
+		else{
 			count = 0;
 			starter = 0;
 			disable_pi_regulator();
@@ -161,8 +150,7 @@ int main(void)
 }
 
 
-void blink_led_error(void)
-{
+void blink_led_error(void){
 	set_rgb_led(0,255,0,0);
 	set_rgb_led(1,255,0,0);
 	set_rgb_led(2,255,0,0);

@@ -5,21 +5,25 @@
 
 #include <main.h>
 #include <camera/po8030.h>
+#include <pi_regulator.h>
 
 #include <process_image.h>
 #define BITRED  		15
 #define BITGREEN  		10
 #define BITBLUE  		4
 #define NB_BAR 			3
-#define ERROR_PIXEL		20
+#define ERROR_WIDTH		0.1f
 #define INDEX_MIN  		50	
-#define MIN_INTENSITY 	15
+#define MIN_INTENSITY 	20
 
 //#define DEBUG_IMAGE
+//#define DEBUG_IMAGE2
 
 static float distance_cm = 0;
-static float PXTOCM = 1400;
+static const float PXTOCM = 1550;
 static uint16_t line_pos =INDEX_MIN;
+
+static uint16_t line_mid =INDEX_MIN;
 static uint32_t posList[NB_BAR*2];
 static uint8_t code = 0b000;
 
@@ -88,6 +92,7 @@ uint16_t detection(uint8_t *image){
 				posList[2*lineCount-1] = i;
 				if(lineCount == NB_BAR)
 				{
+					line_mid = (i+line_pos)/2;
 					return (i-line_pos);
 				}
 			}
@@ -100,27 +105,28 @@ uint16_t detection(uint8_t *image){
 
 uint8_t detect_codebarre(uint32_t width) // OPTIMISER
 {
-	uint8_t width_1 = posList[1]- posList[0];
-	uint8_t width_2 = posList[3]- posList[2];
-	uint8_t width_3 = posList[5]- posList[4];
+	uint8_t width_1 = (posList[1]- posList[0])*GOAL_DISTANCE/10;
+	uint8_t width_2 = (posList[3]- posList[2])*GOAL_DISTANCE/10;
+	uint8_t width_3 = (posList[5]- posList[4])*GOAL_DISTANCE/10;
 	code = 0b000;
 	float big_width = (float)width*1.2/3.9;
 	float small_width = (float)width*0.6/3.9;
-	if((width_1 < big_width+ERROR_PIXEL)&&(width_1 > big_width-ERROR_PIXEL))
+	float error = width * ERROR_WIDTH;
+	if((width_1 < big_width + error)&&(width_1 > big_width - error))
 	{
 		code |= 0b100;
 	}
-	if((width_2 < big_width+ERROR_PIXEL)&&(width_2 > big_width-ERROR_PIXEL))
+	if((width_2 < big_width + error)&&(width_2 > big_width - error))
 	{
 		code |= 0b010;
 	}
-	if((width_3 < big_width+ERROR_PIXEL)&&(width_3 > big_width-ERROR_PIXEL))
+	if((width_3 < big_width + error)&&(width_3 > big_width - error))
 	{
 		code |= 0b001;
 	}
 #ifdef DEBUG_IMAGE
 	{
-		chprintf((BaseSequentialStream *)&SDU1, "width1 = %d, width3 = %d, width3 = %d, code = %d\n", width_1, width_2, width_3, code);
+		chprintf((BaseSequentialStream *)&SDU1, "width1 = %d, width2 = %d, width3 = %d, big_width = %f,code = %d\n", width_1, width_2, width_3, big_width, code);
 	}
 #endif
 
@@ -136,8 +142,9 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
-	bool boucle = 0;
+	bool boucle = FALSE;
 	uint16_t width =0;
+	bool tmp = FALSE;
     while(1){
     	//waits until an image has been captured
         chBSemWait(&image_ready_sem);
@@ -155,19 +162,38 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 			if(width ==0)
 			{
-#ifdef DEBUG_IMAGE
+
+
+#ifdef DEBUG_IMAGE2
 				{
 					chprintf((BaseSequentialStream *)&SDU1, "Distance not found\n");
 				}
+//#else
+//				{
+//					if(!tmp && get_pi_status()){
+//						disable_pi_regulator();
+//						right_motor_set_speed(100);
+//						left_motor_set_speed(100);
+//						chThdSleepSeconds(1);
+//						tmp = TRUE;
+//						right_motor_set_speed(0);
+//						left_motor_set_speed(0);
+//						re_enable_pi_regulator();
+//					}
+//					else if(get_pi_status()){
+//						disable_pi_regulator();
+//						tmp = FALSE;
+//					}
+//
+//				}
 #endif
-// ajouter un comportement du robot dans ce cas la
 			}
-			else
-			{
+			else{
+				tmp = FALSE;
 				distance_cm = PXTOCM/width*1.925;
 
-				uint8_t code = detect_codebarre(width);
-#ifdef DEBUG_IMAGE
+				uint8_t code = detect_codebarre(width*GOAL_DISTANCE/10);
+#ifdef DEBUG_IMAGE2
 				{
 					chprintf((BaseSequentialStream *)&SDU1, "Distance = %f, code = %d\n", distance_cm, code);
 				}
@@ -182,13 +208,12 @@ float get_distance_cm(void){
 	return distance_cm;
 }
 
-uint8_t get_code_bar(void)
-{
+uint8_t get_code_bar(void){
 	return code;						
 }
 
 uint16_t get_line_pos(void){
-	return line_pos;
+	return line_mid;
 }
 
 void process_image_start(void){
