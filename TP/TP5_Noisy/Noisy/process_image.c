@@ -6,15 +6,15 @@
 #include <main.h>
 #include <camera/po8030.h>
 #include <pi_regulator.h>
-
 #include <process_image.h>
+
 #define BITRED  		15
 #define BITGREEN  		10
 #define BITBLUE  		4
 #define NB_BAR 			3
 #define ERROR_WIDTH		0.1f
 #define INDEX_MIN  		50	
-#define MIN_INTENSITY 	20
+#define MIN_INTENSITY 	22
 
 //#define DEBUG_IMAGE
 //#define DEBUG_IMAGE2
@@ -26,7 +26,6 @@ static uint16_t line_pos =INDEX_MIN;
 static uint16_t line_mid =INDEX_MIN;
 static uint32_t posList[NB_BAR*2];
 static uint8_t code = 0b000;
-
 
 //semaphore
 static SEMAPHORE_DECL(image_ready_sem, TRUE);
@@ -44,10 +43,8 @@ static THD_FUNCTION(CaptureImage, arg) {
 	dcmi_prepare();
 
     while(1){
-
-    	//chThdSleep(12);
-    	systime_t time;
-    	time = chVTGetSystemTime();// peut etre enlever
+//    	systime_t time;
+//    	time = chVTGetSystemTime();// peut etre enlever
     	//starts a capture
 		dcmi_capture_start();
 		//waits for the capture to be done
@@ -55,7 +52,6 @@ static THD_FUNCTION(CaptureImage, arg) {
 		//signals an image has been captured
 		chBSemSignal(&image_ready_sem);
 		chThdSleep(100);
-
     }
 }
 
@@ -69,15 +65,11 @@ uint16_t detection(uint8_t *image){
 	for(unsigned int i=INDEX_MIN; i < IMAGE_BUFFER_SIZE; i++){
 		moy += image[i];
 		count++;
-		if(count == 5)
-		{
+		if(count == 5){
 			moy = moy/count;
-			if(moy > MIN_INTENSITY)
-			{
-				if(found == 0)
-				{
-					if(!codeStart)
-					{
+			if(moy > MIN_INTENSITY){
+				if(found == 0){
+					if(!codeStart){
 						codeStart = 1;
 						line_pos= i-count+1;
 					}
@@ -85,13 +77,11 @@ uint16_t detection(uint8_t *image){
 					found = 1;
 				}
 			}
-			else if((found == 1) && (moy < MIN_INTENSITY))
-			{
+			else if((found == 1) && (moy < MIN_INTENSITY)){
 				found = 0;
 				lineCount ++;
 				posList[2*lineCount-1] = i;
-				if(lineCount == NB_BAR)
-				{
+				if(lineCount == NB_BAR){
 					line_mid = (i+line_pos)/2;
 					return (i-line_pos);
 				}
@@ -103,8 +93,7 @@ uint16_t detection(uint8_t *image){
 	return 0; // ajouter un message d'erreur ou ajouter un retour de la largeur actuelle
 }
 
-uint8_t detect_codebarre(uint32_t width) // OPTIMISER
-{
+uint8_t detect_codebarre(uint32_t width){
 	uint8_t width_1 = (posList[1]- posList[0])*GOAL_DISTANCE/10;
 	uint8_t width_2 = (posList[3]- posList[2])*GOAL_DISTANCE/10;
 	uint8_t width_3 = (posList[5]- posList[4])*GOAL_DISTANCE/10;
@@ -112,16 +101,13 @@ uint8_t detect_codebarre(uint32_t width) // OPTIMISER
 	float big_width = (float)width*1.2/3.9;
 	float small_width = (float)width*0.6/3.9;
 	float error = width * ERROR_WIDTH;
-	if((width_1 < big_width + error)&&(width_1 > big_width - error))
-	{
+	if((width_1 < big_width + error)&&(width_1 > big_width - error)){
 		code |= 0b100;
 	}
-	if((width_2 < big_width + error)&&(width_2 > big_width - error))
-	{
+	if((width_2 < big_width + error)&&(width_2 > big_width - error)){
 		code |= 0b010;
 	}
-	if((width_3 < big_width + error)&&(width_3 > big_width - error))
-	{
+	if((width_3 < big_width + error)&&(width_3 > big_width - error)){
 		code |= 0b001;
 	}
 #ifdef DEBUG_IMAGE
@@ -132,7 +118,6 @@ uint8_t detect_codebarre(uint32_t width) // OPTIMISER
 
 	return code ;
 }
-
 
 static THD_WORKING_AREA(waProcessImage, 1024);
 static THD_FUNCTION(ProcessImage, arg) {
@@ -156,36 +141,15 @@ static THD_FUNCTION(ProcessImage, arg) {
 			for(unsigned int i = 0; i < IMAGE_BUFFER_SIZE; ++i){
 				image[i] = img_buff_ptr[2*i+1];
 				image[i] &= 0b00011111; // blue
-
 			}
 			width = detection(image);
 
-			if(width ==0)
-			{
-
+			if(width ==0){
 
 #ifdef DEBUG_IMAGE2
 				{
 					chprintf((BaseSequentialStream *)&SDU1, "Distance not found\n");
 				}
-//#else
-//				{
-//					if(!tmp && get_pi_status()){
-//						disable_pi_regulator();
-//						right_motor_set_speed(100);
-//						left_motor_set_speed(100);
-//						chThdSleepSeconds(1);
-//						tmp = TRUE;
-//						right_motor_set_speed(0);
-//						left_motor_set_speed(0);
-//						re_enable_pi_regulator();
-//					}
-//					else if(get_pi_status()){
-//						disable_pi_regulator();
-//						tmp = FALSE;
-//					}
-//
-//				}
 #endif
 			}
 			else{

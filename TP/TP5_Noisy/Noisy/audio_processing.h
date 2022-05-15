@@ -1,7 +1,6 @@
 #ifndef AUDIO_PROCESSING_H
 #define AUDIO_PROCESSING_H
 
-
 #define FFT_SIZE 	1024
 
 typedef enum {
@@ -17,7 +16,6 @@ typedef enum {
 	BACK_OUTPUT,
 	TEST = 0
 } BUFFER_NAME_t;
-
 
 void processAudioData(int16_t *data);
 
@@ -36,5 +34,6 @@ void mic_standby(void);
 bool get_ready_signal(void);
 void search_done(void);
 uint8_t get_code_audio(void);
+bool get_lock_status(void);
 
 #endif /* AUDIO_PROCESSING_H */

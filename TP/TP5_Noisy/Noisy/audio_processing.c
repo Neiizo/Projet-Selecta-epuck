@@ -24,9 +24,6 @@ static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
-//static float mic_used[2*FFT_SIZE];
-
-static int16_t max_norm_index = -1; //index
 
 #define MIN_VALUE_THRESHOLD	10000
 
@@ -36,7 +33,7 @@ static int16_t max_norm_index = -1; //index
 #define MARS 			600 	//Hz
 #define SNICKERS		500 	//Hz
 #define STOP_SEARCH		700 	//Hz
-#define UNLOCK_SEARCH	900		//Hz  AJUSTER FREQ
+#define UNLOCK_SEARCH	900		//Hz
 #define LOCK_SEARCH		1100	//Hz
 #define ERROR_FREQ		30  	//Hz
 #define NO_CODE 		0
@@ -48,7 +45,6 @@ static int16_t max_norm_index = -1; //index
 
 //#define DEBUG_AUDIO
 
-
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
 #define FREQ_FORWARD_H		(FREQ_FORWARD+1)
 #define FREQ_LEFT_L			(FREQ_LEFT-1)
@@ -58,7 +54,6 @@ static int16_t max_norm_index = -1; //index
 #define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
 #define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
 
-
 static uint8_t search = NO_CODE;
 static bool waiting = 0;
 static bool locked = 0;
@@ -66,14 +61,11 @@ static unsigned int size = 0;
 static float frequency = 0;
 static bool is_searching = 0;
 
-unsigned int detectPeak1(float *data)
-{
+unsigned int detectPeak1(float *data){
 	float tmp_max = MIN_FREQ; 
 	unsigned int tmp_index = MIN_POS;
-	for(unsigned int i = MIN_POS; i < FFT_SIZE/4; i++)
-	{
-		if(data[i] > tmp_max)
-		{
+	for(unsigned int i = MIN_POS; i < FFT_SIZE/4; i++){
+		if(data[i] > tmp_max){
 			tmp_max = data[i];
 			tmp_index= i;
 		}
@@ -85,8 +77,7 @@ void processAudioData(int16_t *data){
 
 	unsigned int pos_tmp = 10;
 
-	for(unsigned int i=0; i < 160; i++)
-	{
+	for(unsigned int i=0; i < 160; i++){
 		micRight_cmplx_input[2*size] = data[4*i];
 		micLeft_cmplx_input[2*size] = data[4*i+1];
 		micBack_cmplx_input[2*size] = data[4*i+2];
@@ -98,62 +89,49 @@ void processAudioData(int16_t *data){
 		micFront_cmplx_input[2*size+1] = 0;
 		size++;
 
-		if(size >= FFT_SIZE)
-		{
+		if(size >= FFT_SIZE){
 			break;
 		}
 	}
 
-	if(size >= FFT_SIZE)
-	{
+	if(size >= FFT_SIZE){
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 		size = 0;
 		pos_tmp = detectPeak1(micLeft_output);
-			
+
 		frequency = pos_tmp*15.1925; 
 
-		if(!waiting && frequency !=0 && !locked) // FAIRE UN LIEN ENTRE LOCK ET GO SEARCHING
-		{
-			if(frequency > SNICKERS - ERROR_FREQ && frequency < SNICKERS + ERROR_FREQ)
-			{
+		if(!waiting && frequency !=0 && !locked){
+			if(frequency > SNICKERS - ERROR_FREQ && frequency < SNICKERS + ERROR_FREQ){
 				search = SNICKERS_CODE;
 			}
-			else if(frequency > MARS - ERROR_FREQ && frequency < MARS + ERROR_FREQ)
-			{
+			else if(frequency > MARS - ERROR_FREQ && frequency < MARS + ERROR_FREQ){
 				search = MARS_CODE;
 			}
-			else if(frequency > BUENO - ERROR_FREQ && frequency < BUENO + ERROR_FREQ)
-			{
+			else if(frequency > BUENO - ERROR_FREQ && frequency < BUENO + ERROR_FREQ){
 				search = BUENO_CODE;
-			}
-			else if(frequency > LOCK_SEARCH - ERROR_FREQ && frequency < LOCK_SEARCH + ERROR_FREQ)
+			}else if(frequency > LOCK_SEARCH - ERROR_FREQ && frequency < LOCK_SEARCH + ERROR_FREQ)
 			{
 				search = LOCK_CODE;
-			}
-			else
+			}else
 			{
 				search = NO_CODE;
 			}
 		}
-		
-		if(frequency > STOP_SEARCH - ERROR_FREQ && frequency < STOP_SEARCH + ERROR_FREQ && !locked)
-		{
+		if(frequency > STOP_SEARCH - ERROR_FREQ && frequency < STOP_SEARCH + ERROR_FREQ && !locked){
 			search = STOP_CODE;
-			is_searching = 0; //utilité?
+			is_searching = 0;
 		}
-		if(frequency > UNLOCK_SEARCH - ERROR_FREQ && frequency < UNLOCK_SEARCH + ERROR_FREQ)
-		{
+		if(frequency > UNLOCK_SEARCH - ERROR_FREQ && frequency < UNLOCK_SEARCH + ERROR_FREQ){
 			search = NO_CODE;
-			is_searching = 0; //utilité?
+			is_searching = 0;
 			locked = FALSE;
 		}
-		if(search == LOCK_CODE)
-		{
+		if(search == LOCK_CODE){
 			locked = TRUE;
 		}
-		else if(search != NO_CODE && search != STOP_CODE)
-		{
+		else if(search != NO_CODE && search != STOP_CODE){
 			is_searching = TRUE;
 		}
 #ifdef DEBUG_AUDIO
@@ -178,14 +156,16 @@ void mic_standby(void){
 	waiting = FALSE;
 }
 
-bool get_ready_signal(void)
-{
+bool get_ready_signal(void){
 	return is_searching;
 }
 
-uint8_t get_code_audio(void)
-{
+uint8_t get_code_audio(void){
 	return search;
+}
+
+bool get_lock_status(void){
+	return locked;
 }
 
 float* get_audio_buffer_ptr(BUFFER_NAME_t name){

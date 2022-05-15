@@ -65,8 +65,10 @@ static THD_FUNCTION(PiRegulator, arg) {
 
         //applies the speed from the PI regulator
 
-		 if(abs(speed) < SPEED_MIN && !stop_found){
+		 if(abs(speed) < SPEED_MIN && !stop_found && en_pi_regulator){
 			 stop_found = 1;
+			 right_motor_set_speed(0);
+			 left_motor_set_speed(0);
 		 }
 		 if(!stop_found && en_pi_regulator) {
 			 right_motor_set_speed(speed - ROTATION_COEFF * speed_correction);

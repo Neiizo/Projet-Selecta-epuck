@@ -18,8 +18,7 @@ extern "C" {
 #define GOAL_DISTANCE 			15.0f
 #define MAX_DISTANCE 			25.0f
 #define ERROR_THRESHOLD			0.1f	//[cm] because of the noise of the camera
-#define KP						650.0f
-//450
+#define KP						500.0f
 #define KI						2.5f	//must not be zero
 #define MAX_SUM_ERROR 			(MOTOR_SPEED_LIMIT/KI)
 #define SPEED_MIN 				1

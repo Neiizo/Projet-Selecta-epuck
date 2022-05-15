@@ -21,30 +21,13 @@
 #include <arm_math.h>
 #include <spi_comm.h>
 
-#define GOAL 			10.0f
-#define DEMITOUR 		1
-#define QUARTDROITE 	2
-#define QUARTGAUCHE 	3
-#define PI 				3.1415926536f
-#define WHEELDISTANCE	5.35f
-#define PERIMETRE		(PI*WHEELDISTANCE)
-#define DEFAULT_SPEED 	1000 //1000
-#define WHEEL_PERIMETER 13.0f
-#define CMTOSTEP		1000/13.0f
-
-#define PATH1			1
-#define PATH2 			2
-#define PATH3			3
-#define NO_PATH 		0
-#define ERROR_TRAVEL	1.0f //cm
-
 //#define DEBUG_NO_PI
 
-static float distance_step = 0;
-static float tof = 0;
-static uint8_t rotation =0;
-
 #define SEND_FROM_MIC
+
+void blink_led_error(void);
+void blink_led_found(void);
+void blink_led_lock(void);
 
 void SendUint8ToComputer(uint8_t* data, uint16_t size){
 	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)"START", 5);
@@ -59,10 +42,9 @@ static void serial_start(void){
 	    0,
 	    0,
 	};
-
 	sdStart(&SD3, &ser_cfg); // UART3.
 }
-//utilité du timer ?
+
 static void timer12_start(void){
     static const GPTConfig gpt12cfg = {
         1000000,        /* 1MHz timer clock in order to measure uS.*/
@@ -100,52 +82,43 @@ int main(void){
     bool starter = 0 ;
 
 	process_image_start();
+
 #ifndef DEBUG_NO_PI
 	{
 		pi_regulator_start();
 	}
 #endif
-    while (1)
-    {
-    	if(get_ready_signal()){
-    		if(!starter)
-    		{
-    			mic_wait();
-    			starter = 1;
-    			re_enable_pi_regulator();
-    		}
-#ifdef DEBUG_NO_PI
-    		{
-    			count++;
-    		}
-#else
-    		{
-    			count = -1;
-    		}
-#endif
-    		if(get_found_status() || count == 10){
 
-				if(get_code_bar() == get_code_audio()){
-					blink_led_found();
-				}
-    			else{
-    				blink_led_error();
-				}
-    			chThdSleepMilliseconds(100);
-    			disable_pi_regulator();
-    			mic_standby();
-				count = 0;
-    			starter = 0;
-    		}
+    while (1){
+    	if(get_ready_signal() && !starter){
+    		mic_wait();
+    		starter = 1;
+    		re_enable_pi_regulator();
     	}
-		else{
-			count = 0;
-			starter = 0;
+#ifdef DEBUG_NO_PI
+    	{
+    		count++;
+    	}
+#else
+    	{
+    		count = -1;
+    	}
+#endif
+    	if((get_found_status() && !get_lock_status()) || count == 10){
+    		if(get_code_bar() == get_code_audio()){
+    			blink_led_found();
+    		}
+    		else{
+    			blink_led_error();
+    		}
 			disable_pi_regulator();
 			mic_standby();
-		}
-
-        chThdSleepMilliseconds(1000);
+			count = 0;
+			starter = 0;
+    	}else if(get_lock_status()){
+    		blink_led_lock();
+    	}
+    	chThdSleepMilliseconds(1000);
     }
 }
 
@@ -162,82 +135,27 @@ void blink_led_error(void){
 	set_rgb_led(3,0,0,0);
 }
 
-void blink_led_found(void)
-{
+void blink_led_lock(void){
+	set_rgb_led(0,0,0,255);
+	set_rgb_led(1,0,0,255);
+	set_rgb_led(2,0,0,255);
+	set_rgb_led(3,0,0,255);
+	chThdSleepSeconds(3);
+	set_rgb_led(0,0,0,0);
+	set_rgb_led(1,0,0,0);
+	set_rgb_led(2,0,0,0);
+	set_rgb_led(3,0,0,0);
+}
+
+void blink_led_found(void){
 	set_body_led(1);
 	chThdSleepSeconds(3);
 	set_body_led(0);
 }
 
-void motor_distance(void)
-{
-    //chprintf((BaseSequentialStream *)&SDU1, "distance =%f, tof =  %f, distance_step = %f\n", GOAL, tof, distance_step);
-    
-    distance_step = GOAL *CMTOSTEP ; // conversion cm to step
-    tof = distance_step*1000/DEFAULT_SPEED; // computation of the duration
-    right_motor_set_speed(DEFAULT_SPEED);
-    left_motor_set_speed(DEFAULT_SPEED);
-    
-    chThdSleepMilliseconds(tof);
-    right_motor_set_speed(0);
-    left_motor_set_speed(0);
-
-}
-void motor_rotation(void)
-{
-	chprintf((BaseSequentialStream *)&SDU1, "motor rotation\n");
-	static bool flag =0;
-	static float speed =0;
-	static float rotation_cm =0;
-	switch(rotation){
-		case DEMITOUR :
-			rotation_cm = (float)PERIMETRE/2;//2
-			chprintf((BaseSequentialStream *)&SDU1, "1111\n");
-			break;
-		case QUARTDROITE :
-			rotation_cm = PERIMETRE/4;
-			chprintf((BaseSequentialStream *)&SDU1, "2222\n");
-			if(flag)
-			{
-				rotation_cm = 2* rotation_cm;
-				flag = 0;
-			}
-			else
-			{
-				flag = 1; // rendre plus opti
-			}
-			break;
-		case QUARTGAUCHE :
-			rotation_cm = (float)-PERIMETRE/4;
-			chprintf((BaseSequentialStream *)&SDU1, "3333\n");
-			if(flag)
-			{
-				rotation_cm = 2* rotation_cm;
-						flag = 0;
-			}
-			else
-			{
-				flag = 1; // rendre plus opti
-			}
-			break;
-	}
-	static float rotation_step;
-	rotation_step = rotation_cm*1000/WHEEL_PERIMETER ; // conversion cm to step
-	speed = DEFAULT_SPEED*rotation_step/fabs(rotation_step);
-	tof = rotation_step*4000/DEFAULT_SPEED;
-	right_motor_set_speed(speed);
-	left_motor_set_speed(-speed);
-
-	chThdSleepMilliseconds(tof);
-	right_motor_set_speed(0);
-	left_motor_set_speed(0);
-	chprintf((BaseSequentialStream *)&SDU1, "TEST = %f, tof= %d\n", speed, (uint32_t)tof);
-}
-
 #define STACK_CHK_GUARD 0xe2dee396
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
-void __stack_chk_fail(void)
-{
+void __stack_chk_fail(void){
    chSysHalt("Stack smashing detected");
 }
