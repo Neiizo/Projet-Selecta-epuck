@@ -12,6 +12,7 @@
 #include <audio/microphone.h>
 #include <camera/po8030.h>
 #include <chprintf.h>
+#include <leds.h>
 
 #include <pi_regulator.h>
 #include <process_image.h>

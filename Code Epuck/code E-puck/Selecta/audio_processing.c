@@ -110,11 +110,9 @@ void processAudioData(int16_t *data){
 			}
 			else if(frequency > BUENO - ERROR_FREQ && frequency < BUENO + ERROR_FREQ){
 				search = BUENO_CODE;
-			}else if(frequency > LOCK_SEARCH - ERROR_FREQ && frequency < LOCK_SEARCH + ERROR_FREQ)
-			{
+			}else if(frequency > LOCK_SEARCH - ERROR_FREQ && frequency < LOCK_SEARCH + ERROR_FREQ){
 				search = LOCK_CODE;
-			}else
-			{
+			}else{
 				search = NO_CODE;
 			}
 		}
@@ -147,8 +145,7 @@ void mic_wait(void){
 }
 
 void mic_standby(void){
-	if(search != LOCK_CODE)
-	{
+	if(search != LOCK_CODE){
 		search = NO_CODE;
 	}
 	is_searching = FALSE;
