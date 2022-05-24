@@ -30,7 +30,7 @@ static float micBack_output[FFT_SIZE];
 #define BUENO			400 	//Hz
 #define MARS 			600 	//Hz
 #define SNICKERS		500 	//Hz
-#define STOP_SEARCH		700 	//Hz
+#define STOP_SEARCH		2100 	//Hz
 #define UNLOCK_SEARCH	900		//Hz
 #define LOCK_SEARCH		1100	//Hz
 #define ERROR_FREQ		30  	//Hz
