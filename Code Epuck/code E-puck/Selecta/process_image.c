@@ -15,7 +15,7 @@
 #define ERROR_WIDTH		0.1f
 #define INDEX_MIN  		50	
 #define MIN_INTENSITY 	22
-#define PXTOCM			1550
+#define PXTOCM			2983.75f
 
 //#define DEBUG_IMAGE
 //#define DEBUG_IMAGE2
@@ -147,7 +147,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 #endif
 			}
 			else{
-				distance_cm = PXTOCM/width*1.925;
+				distance_cm = PXTOCM/width;
 				detect_codebarre(width*GOAL_DISTANCE/10);
 #ifdef DEBUG_IMAGE2
 				{
